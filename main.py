@@ -1,26 +1,30 @@
 import asyncio
 import os
-import threading
-
 import uvicorn
+
 from dotenv import load_dotenv
 from fastapi import FastAPI
 
+from api_client.client import FastAPIClient
 from telegram_bot import ChatTelegramBot
 from routes import router as telegram_router
-
-from telegram.ext import Application, ApplicationBuilder
 
 
 def create_bot():
     load_dotenv()
 
+    FASTAPI_URL = "http://localhost:8000"
+    api_client = FastAPIClient(FASTAPI_URL)
+
     # Setup configuration
     telegram_config = {
-        'token': os.environ.get('TELEGRAM_BOT_TOKEN', "")
+        'token': os.environ.get('TELEGRAM_BOT_TOKEN', ""),
+        'timeweb_cloud_token': os.environ.get('TIMEWEB_CLOUD_TOKEN', ""),
+        'timeweb_cloud_url': os.environ.get('TIMEWEB_CLOUD_URL', "")
     }
 
-    telegram_bot = ChatTelegramBot(config=telegram_config)
+    telegram_bot = ChatTelegramBot(config=telegram_config,
+                                   api_client=api_client)
     return telegram_bot
 
 
@@ -45,6 +49,13 @@ async def main():
         await application.stop()
         await application.shutdown()
 
+
 if __name__ == "__main__":
     asyncio.run(main())
+    # s3_client()
+
+
+
+
+
 
