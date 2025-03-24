@@ -5,6 +5,7 @@ from io import BytesIO
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import ContextTypes, ApplicationBuilder, CommandHandler, \
     ConversationHandler, MessageHandler, filters, CallbackQueryHandler
+from api_client.client import FastAPIClient
 
 import logging
 
@@ -15,7 +16,7 @@ class ChatTelegramBot:
     """
     Class Telegram Bot
     """
-    def __init__(self, config: dict, api_client):
+    def __init__(self, config: dict, api_client: FastAPIClient):
         self.config = config
         self.max_photos = 3
         self.photo_count = 0
@@ -70,17 +71,23 @@ class ChatTelegramBot:
     async def next_step(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         if not self.photo_casche:
             return
-        files_of_bytes = [BytesIO(await file.download_as_bytearray()) for file in self.photo_casche]
-        response = await self.api_client.upload_zip(
-            files_of_bytes=files_of_bytes,
-            user=update.message.from_user
-        )
-        await update.message.reply_text(f"Сохранено {len(self.photo_casche)} фото!")
-        print("Time: ", time.perf_counter() - self.start)
+
+        try:
+            files_of_bytes = [BytesIO(await file.download_as_bytearray()) for file in self.photo_casche]
+            await update.message.reply_text(
+                f"Фотографии успешно отправлены. Ожидайте ответа от сервера...")
+            response = await self.api_client.upload_zip(
+                files_of_bytes=files_of_bytes,
+                user=update.message.from_user
+            )
+            if response:
+                await update.message.reply_text(f"Сохранено {len(self.photo_casche)} фото!")
+            else:
+                await update.message.reply_text(f"Что-то пошло не так. Попробуйте еще раз.")
+        except Exception as e:
+            await update.message.reply_text(f"Что пошло не так")
 
     async def save_user_photos(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-        self.start = time.perf_counter()
-
         if not update.message.photo:
             return
 

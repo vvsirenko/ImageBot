@@ -7,7 +7,7 @@ from fastapi import FastAPI
 
 from api_client.client import FastAPIClient
 from telegram_bot import ChatTelegramBot
-from routes import router as telegram_router
+from rest_api.routes import router as telegram_router
 
 
 def create_bot():
