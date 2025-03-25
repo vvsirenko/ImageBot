@@ -18,7 +18,7 @@ class ChatTelegramBot:
     """
     def __init__(self, config: dict, api_client: FastAPIClient):
         self.config = config
-        self.max_photos = 3
+        self.max_photos = 1
         self.photo_count = 0
         self.photo_casche = []
         self.api_client = api_client

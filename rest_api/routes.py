@@ -1,4 +1,3 @@
-import asyncio
 import json
 import os
 
@@ -7,7 +6,7 @@ from fastapi import APIRouter, HTTPException, Depends, UploadFile, Form, status
 from dotenv import load_dotenv
 from pydantic import ValidationError
 
-from models.api_model import StringsInput, User
+from models.api_model import User
 from rest_api.models import ResponseModel
 from storage.client import S3ClientABC, get_s3_client
 
@@ -68,25 +67,22 @@ async def upload_zip(
             client=s3_client,
             user=user
         )
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=ResponseModel(
-                status="error",
-                error=str(e),
-                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                message=f"Error while uploading to external service: {s3_client.service_name}"
-            ).dict()
-        )
+    except Exception as exception:
+        return ResponseModel(
+            status="error",
+            status_code=exception.status_code if exception.status_code else status.HTTP_400_BAD_REQUEST,
+            error=str(exception)
+        ).dict()
+    else:
+        return ResponseModel(
+            status="success",
+            body={"response": response},
+            status_code=status.HTTP_201_CREATED,
+            message=f"User data successfully uploaded to external service {s3_client.service_name}"
+        ).dict()
     finally:
         if os.path.exists(temp_file_path):
             os.remove(temp_file_path)
-    return ResponseModel(
-            status="success",
-            body=bool(response),
-            status_code=status.HTTP_201_CREATED,
-            message=f"User data successfully uploaded to external service {s3_client.service_name}"
-    )
 
 
 async def upload_zip_utils(files: dict, client: S3ClientABC, user: User) -> dict:

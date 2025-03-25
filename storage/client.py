@@ -18,6 +18,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 
 class S3ClientABC(ABC):
     service_name = 's3'
+
     @abstractmethod
     async def upload_file(
             self, file_path_image: str,
@@ -32,6 +33,18 @@ class S3ClientABC(ABC):
             user
     ) -> bool:
         raise NotImplementedError
+
+
+class APIError(Exception):
+    """Custom exception for API errors."""
+    def __init__(self, status_code, message, error_code, response_id):
+        self.status_code = status_code
+        self.message = message
+        self.error_code = error_code
+        self.response_id = response_id
+
+    def __str__(self):
+        return f"APIError {self.status_code}: {self.message} (Error Code: {self.error_code}, Response ID: {self.response_id})"
 
 
 class S3Client(S3ClientABC):
@@ -143,56 +156,18 @@ class S3Client(S3ClientABC):
                 )
                 params = {'path': f'/{user.id}/training/'}
                 async with session.post(cloud_url, data=data, params=params) as response:
-                    response.raise_for_status() # Raise an exception if the response status code is not 200
-                    return ResponseModel(
-                        status="success",
-                        body=response.status,
-                        status_code=status.HTTP_201_CREATED,
-                        message=f"User data successfully uploaded"
-                    )
-
-        except aiohttp.ClientError as e:
-            logging.error(f"Client error: {e} user_id: {user.id if user.id else 'unknown'}")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=ResponseModel(
-                    status="error",
-                    error=str(e),
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    message=f"HTTP response error"
-                ).dict()
-            )
-        except aiohttp.ClientTimeout as e:
-            logging.error(f"TimeoutError error: {e} user_id: {user.id if user.id else 'unknown'}")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=ResponseModel(
-                    status="error",
-                    error=str(e),
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    message=f"TimeoutError: Request timed out"
-                ).dict()
-            )
-        except aiohttp.http_exceptions.HttpProcessingError as e:
-            logging.error(f'HTTP processing error: {e}')
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=ResponseModel(
-                    status="error",
-                    error=str(e),
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    message=f"HTTP processing error"
-                ).dict()
-            )
+                    response.raise_for_status()
+                    if response.status == 204:
+                        return {"success": True}
         except Exception as e:
-            logging.error(f'Unexpected error: {e}')
+            logging.error(f'Unexpected error s3: {e}')
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
+                status_code=response.status if response else status.HTTP_400_BAD_REQUEST,
                 detail=ResponseModel(
                     status="error",
                     error=str(e),
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    message=f"Unexpected error"
+                    status_code=response.status if response else status.HTTP_400_BAD_REQUEST,
+                    message=""
                 ).dict()
             )
 
