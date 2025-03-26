@@ -98,44 +98,13 @@ class S3Client(S3ClientABC):
         finally:
             return is_send
 
-    async def upload_zip(self, files: BufferedReader | Any,
-                         cloud_url: str, user) -> dict:
+    async def upload_zip(self, files: BufferedReader | Any, cloud_url: str, user) -> dict:
+        response = None
         try:
             async with (aiohttp.ClientSession(headers=self.upload_header) as session):
+                with open(files.name, "rb") as file:
+                    buffered_file = file.read()
                 data = aiohttp.FormData()
-
-                try:
-                    with open(files.name, "rb") as file:
-                        buffered_file = file.read()
-                except FileNotFoundError:
-                    logging.error(
-                        f"File not found: {files.name} "
-                        f"user_id: {user.id if user.id else 'unknown'}"
-                    )
-                    raise HTTPException(
-                        status_code=status.HTTP_404_NOT_FOUND,
-                        detail=ResponseModel(
-                            status="error",
-                            error="",
-                            status_code=status.HTTP_404_NOT_FOUND,
-                            message=f"FileNotFoundError: File '{files.name}' not found."
-                        ).dict()
-                    )
-                except Exception as e:
-                    logging.error(
-                        f"Error reading file: {files} "
-                        f"user_id: {user.id if user.id else 'unknown'}"
-                    )
-                    raise HTTPException(
-                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        detail=ResponseModel(
-                            status="error",
-                            error="",
-                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            message=f"Error reading file: {str(e)}"
-                        ).dict()
-                    )
-
                 data.add_field(
                     name="file",
                     value=buffered_file,
@@ -147,14 +116,32 @@ class S3Client(S3ClientABC):
                     response.raise_for_status()
                     if response.status == 204:
                         return {"success": True}
+        except FileNotFoundError as exp:
+            logging.error(
+                    f"File not found: {files.name} "
+                    f"user_id: {user.id if user.id else 'unknown'}"
+                )
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail=ResponseModel(
+                    status="error",
+                    error=str(exp),
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    message=f"FileNotFoundError: File '{files.name}' not found."
+                ).dict()
+            )
         except Exception as e:
             logging.error(f'Unexpected error s3: {e}')
+            if not response:
+                status_code = status.HTTP_400_BAD_REQUEST
+            else:
+                status_code = response.status
             raise HTTPException(
-                status_code=response.status if response else status.HTTP_400_BAD_REQUEST,
+                status_code=status_code,
                 detail=ResponseModel(
                     status="error",
                     error=str(e),
-                    status_code=response.status if response else status.HTTP_400_BAD_REQUEST,
+                    status_code=status_code,
                     message=""
                 ).dict()
             )
