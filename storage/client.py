@@ -35,18 +35,6 @@ class S3ClientABC(ABC):
         raise NotImplementedError
 
 
-class APIError(Exception):
-    """Custom exception for API errors."""
-    def __init__(self, status_code, message, error_code, response_id):
-        self.status_code = status_code
-        self.message = message
-        self.error_code = error_code
-        self.response_id = response_id
-
-    def __str__(self):
-        return f"APIError {self.status_code}: {self.message} (Error Code: {self.error_code}, Response ID: {self.response_id})"
-
-
 class S3Client(S3ClientABC):
     service_name = 'timecloude'
 

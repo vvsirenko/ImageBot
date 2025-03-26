@@ -70,7 +70,8 @@ async def upload_zip(
     except Exception as exception:
         return ResponseModel(
             status="error",
-            status_code=exception.status_code if exception.status_code else status.HTTP_400_BAD_REQUEST,
+            status_code=exception.status_code
+            if exception.status_code else status.HTTP_400_BAD_REQUEST,
             error=str(exception)
         ).dict()
     else:
@@ -78,14 +79,16 @@ async def upload_zip(
             status="success",
             body={"response": response},
             status_code=status.HTTP_201_CREATED,
-            message=f"User data successfully uploaded to external service {s3_client.service_name}"
+            message=f"User data successfully uploaded to "
+                    f"external service {s3_client.service_name}"
         ).dict()
     finally:
         if os.path.exists(temp_file_path):
             os.remove(temp_file_path)
 
 
-async def upload_zip_utils(files: dict, client: S3ClientABC, user: User) -> dict:
+async def upload_zip_utils(files: dict, client: S3ClientABC,
+                           user: User) -> dict:
     load_dotenv() #todo remove in prod
 
     return await client.upload_zip(
