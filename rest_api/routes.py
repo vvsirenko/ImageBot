@@ -1,7 +1,7 @@
 import json
 import os
 
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, Form, status
+from fastapi import APIRouter, Depends, UploadFile, Form, status
 
 from dotenv import load_dotenv
 from pydantic import ValidationError
@@ -19,40 +19,11 @@ async def upload_zip(
         user: str = Form(...),
         s3_client: S3ClientABC = Depends(get_s3_client)
 ):
-    try:
-        user_data = json.loads(user)
-        user = User(**user_data)
-    except json.JSONDecodeError as exp:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ResponseModel(
-                status="error",
-                error=str(exp),
-                status_code=status.HTTP_400_BAD_REQUEST,
-                message=f"Invalid JSON format. Failed to parse JSON user: {user}"
-            ).dict()
-        )
-    except ValidationError as exp:
-        raise HTTPException(
-            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            detail=ResponseModel(
-                status="error",
-                error=str(exp),
-                status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                message=f"Validation error. Invalid user data user: {user}"
-            ).dict()
-        )
+    user_data = json.loads(user)
+    user = User(**user_data)
 
     if not file.filename.endswith(".zip"):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=ResponseModel(
-                status="error",
-                error="",
-                status_code=status.HTTP_400_BAD_REQUEST,
-                message=f"Invalid file format. File must be a ZIP archive user: {user}"
-            ).dict()
-        )
+        raise FileNotFoundError("File does not exist")
 
     temp_file_path = f"temp_{file.filename}"
     with open(temp_file_path, "wb") as buffer:
@@ -67,6 +38,22 @@ async def upload_zip(
             client=s3_client,
             user=user
         )
+    except json.JSONDecodeError as exception:
+        return ResponseModel(
+            status="error",
+            status_code=exception.status_code if exception.status_code
+            else status.HTTP_400_BAD_REQUEST,
+            error=str(exception),
+            message=f"Invalid JSON format. Failed to parse JSON user: {user}"
+        ).dict()
+    except ValidationError as exception:
+        return ResponseModel(
+            status="error",
+            status_code=exception.status_code if exception.status_code
+            else status.HTTP_400_BAD_REQUEST,
+            error=str(exception),
+            message=f"Validation error. Invalid user data user: {user}"
+        ).dict()
     except Exception as exception:
         return ResponseModel(
             status="error",
