@@ -20,7 +20,8 @@ def create_bot():
     telegram_config = {
         'token': os.environ.get('TELEGRAM_BOT_TOKEN', ""),
         'timeweb_cloud_token': os.environ.get('TIMEWEB_CLOUD_TOKEN', ""),
-        'timeweb_cloud_url': os.environ.get('TIMEWEB_CLOUD_URL', "")
+        'timeweb_cloud_url': os.environ.get('TIMEWEB_CLOUD_URL', ""),
+        'support_username': os.environ.get('SUPPORT_USERNAME', "")
     }
 
     telegram_bot = ChatTelegramBot(config=telegram_config,
@@ -52,7 +53,6 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
-    # s3_client()
 
 
 
