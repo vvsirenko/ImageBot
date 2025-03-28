@@ -5,8 +5,10 @@ import aiohttp
 import logging
 import zipfile
 
+from fastapi.encoders import jsonable_encoder
+
 from description_image.client import ImageDescriptor
-from models.api_model import User
+from models.api_model import User, UserCreateRequest
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
@@ -68,7 +70,6 @@ class FastAPIClient:
             async with aiohttp.ClientSession() as session:
                 value_user = User(**user.to_dict()).model_dump_json()
                 # zip_buffer = await self.create_zip_from_files(files_of_bytes)
-
                 zip_buffer = await self.create_zip_from_images(files_of_bytes, user)
 
                 data = aiohttp.FormData()
@@ -108,6 +109,22 @@ class FastAPIClient:
                     return data
         except Exception as e:
             logging.error(f'Unexpected error: {e}. User_id: {user.id}')
+
+    async def add_user(self, user) -> dict:
+        try:
+            async with aiohttp.ClientSession() as session:
+                user = jsonable_encoder(
+                    UserCreateRequest(**user.to_dict()))
+                async with session.post(
+                        url=f"{self.api_url}/add_user/", json=user
+                ) as response:
+                    response.raise_for_status()
+                    return True
+        except Exception as e:
+            logging.error(f'Unexpected error: {e}. User_id: {user}')
+
+
+
 
 
 

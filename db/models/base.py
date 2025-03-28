@@ -22,7 +22,7 @@ class User(Base):
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relationships
-    referrals = relationship('Referral', back_populates='referrer')
+    # referrals = relationship('Referral', back_populates='referrer')
     referred_by = relationship('User', remote_side=[user_id], backref='referred_users')
 
 
@@ -37,9 +37,9 @@ class Payment(Base):
     amount = Column(Float, nullable=False)
     currency = Column(String, nullable=False)
     payment_status = Column(payment_status_enum, default='pending')
-    referrer_id = Column(UUID(as_uuid=True), ForeignKey('users.user_id'), nullable=True)
+    referrer_id = Column(UUID(as_uuid=True), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relationships
-    user = relationship('User', backref='payments')
+    user = relationship('User', foreign_keys=[user_id])

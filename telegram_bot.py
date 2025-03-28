@@ -18,7 +18,7 @@ class ChatTelegramBot:
     """
     def __init__(self, config: dict, api_client: FastAPIClient):
         self.config = config
-        self.max_photos = 1
+        self.max_photos = 3
         self.photo_count = 0
         self.photo_casche = []
         self.api_client = api_client
@@ -32,14 +32,20 @@ class ChatTelegramBot:
 
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         """Send message on `/start`."""
+
+        await self.add_user(user=update.message.from_user)
+
+        support_username = self.config['support_username']
+        support_link = f"https://t.me/{support_username}"
+
         keyboard = [
-            [InlineKeyboardButton("Как это работает?", callback_data='how_it_works'), InlineKeyboardButton("Начать", callback_data='begin')],
-            [InlineKeyboardButton("Поддержка", callback_data='support')]
-            # [InlineKeyboardButton("Пригласить друга", callback_data='invite')],
-            # [InlineKeyboardButton("Язык", callback_data='language'), ]
+            [InlineKeyboardButton("Как это работает?", callback_data='how_it_works')],
+            [
+                InlineKeyboardButton("Начать", callback_data='begin'),
+                InlineKeyboardButton("Связаться с поддержкой", url=support_link)
+            ]
         ]
         reply_markup = InlineKeyboardMarkup(keyboard)
-
         await update.message.reply_text(
             text="Привет!\n\n"
                  "Я готов помочь тебе с твоими фото.\n"
@@ -59,12 +65,37 @@ class ChatTelegramBot:
     async def how_it_works(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         query = update.callback_query
         await query.answer()
-        await query.edit_message_text(text="Пожалуйста, загрузите фото.")
+        await query.edit_message_text(text="Выберите 10 фото, чтобы создать аватар.")
         return self.PHOTO_ROUTES
+
+    async def check_payment_status(self, user_id: int, update: Update) -> bool:
+        """Check the user's payment status from FastAPI."""
+        response = await self.api_client.user_payment_info(
+            user=update.message.from_user
+        )
+
+        if response.status == 200:
+            data = await response.json()
+            return data.get("paid", False)
+        return False
+
+    async def add_user(self, user) -> bool:
+        response = await self.api_client.add_user(user=user)
+        if response.status == 200:
+            return True
+        else:
+            return False
 
     async def begin(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         query = update.callback_query
         await query.answer()
+
+        user_id = query.from_user.id
+        if not await self.check_payment_status(user_id, update):
+            await query.edit_message_text(
+                text="У вас нет активной оплаты. Пожалуйста, совершите платеж.")
+            return self.CREATE_PAYMENT
+
         await query.edit_message_text(text="Пожалуйста, отправьте свои фото, 10 штук")
         return self.SAVE_PHOTO
 
@@ -95,11 +126,15 @@ class ChatTelegramBot:
         self.photo_casche.append(file)
 
         self.photo_count += 1
+        text = f"Фотография {self.photo_count} сохранена. Осталось загрузить {self.max_photos - self.photo_count} фотографий."
+
+        if hasattr(self, "status_message") and self.status_message:
+            await self.status_message.edit_text(text)
+        else:
+            self.status_message = await update.message.reply_text(text)
+
         if self.photo_count >= self.max_photos:
             return await self.next_step(update, context)
-        else:
-            await update.message.reply_text(
-                f"Фотография {self.photo_count} сохранена. Осталось загрузить {self.max_photos - self.photo_count} фотографий.")
 
     async def handle_photo(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         user = update.message.from_user

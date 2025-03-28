@@ -1,12 +1,14 @@
 import json
 import os
 
-from fastapi import APIRouter, Depends, UploadFile, Form, status
+from fastapi import APIRouter, Depends, UploadFile, Form, status, HTTPException
 
 from dotenv import load_dotenv
 from pydantic import ValidationError
 
-from models.api_model import User
+from db.repositories import get_service
+from db.servicies import Service
+from models.api_model import User, UserCreateRequest
 from rest_api.models import ResponseModel
 from storage.client import S3ClientABC, get_s3_client
 
@@ -83,3 +85,41 @@ async def upload_zip_utils(files: dict, client: S3ClientABC,
         cloud_url=os.environ.get("TIMEWEB_CLOUD_URL"),
         user=user
     )
+
+
+@router.get("/payment_status/{user_id}")
+async def payment_status(
+        user_id: int,
+        service: Service = Depends(get_service)
+):
+    """Fetch the user's payment status from the database."""
+    try:
+        result = await service.payment_status(user_id)
+
+        if result:
+            return {"payment_status": "true"}
+        else:
+            return {"payment_status": "false"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+
+
+@router.post("/add_user/", response_model=dict)
+async def add_user(
+    user: UserCreateRequest,
+    service: Service = Depends(get_service)
+):
+    try:
+        user = await service.add_user(
+            tg_id=user.tg_id,
+            username=user.username,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            referral_link=user.referral_link,
+            referrer_id=user.referrer_id,
+        )
+
+        return {"status": True}
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing request: {str(e)}")
