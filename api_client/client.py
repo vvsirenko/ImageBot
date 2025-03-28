@@ -95,6 +95,21 @@ class FastAPIClient:
             logging.info(f"Zip_buffer closed. File uploaded: {upload}. User_id: {user.id}")
             return upload
 
+    async def user_payment_info(self, user_data) -> dict:
+        try:
+            async with aiohttp.ClientSession() as session:
+                user = User(**user_data.to_dict())
+
+                async with session.get(
+                        url=f"{self.api_url}/payment_status/{user.id}",
+                ) as response:
+                    response.raise_for_status()
+                    data = await response.json()
+                    return data
+        except Exception as e:
+            logging.error(f'Unexpected error: {e}. User_id: {user.id}')
+
+
 
 # https://v3.fal.media/files/tiger/ibCRjc9iBXG1mihE01y76_pytorch_lora_weights.safetensors
 

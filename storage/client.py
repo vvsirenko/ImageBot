@@ -18,6 +18,7 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 
 class S3ClientABC(ABC):
     service_name = 's3'
+
     @abstractmethod
     async def upload_file(
             self, file_path_image: str,
@@ -97,44 +98,13 @@ class S3Client(S3ClientABC):
         finally:
             return is_send
 
-    async def upload_zip(self, files: BufferedReader | Any,
-                         cloud_url: str, user) -> dict:
+    async def upload_zip(self, files: BufferedReader | Any, cloud_url: str, user) -> dict:
+        response = None
         try:
             async with (aiohttp.ClientSession(headers=self.upload_header) as session):
+                with open(files.name, "rb") as file:
+                    buffered_file = file.read()
                 data = aiohttp.FormData()
-
-                try:
-                    with open(files.name, "rb") as file:
-                        buffered_file = file.read()
-                except FileNotFoundError:
-                    logging.error(
-                        f"File not found: {files.name} "
-                        f"user_id: {user.id if user.id else 'unknown'}"
-                    )
-                    raise HTTPException(
-                        status_code=status.HTTP_404_NOT_FOUND,
-                        detail=ResponseModel(
-                            status="error",
-                            error="",
-                            status_code=status.HTTP_404_NOT_FOUND,
-                            message=f"FileNotFoundError: File '{files.name}' not found."
-                        ).dict()
-                    )
-                except Exception as e:
-                    logging.error(
-                        f"Error reading file: {files} "
-                        f"user_id: {user.id if user.id else 'unknown'}"
-                    )
-                    raise HTTPException(
-                        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                        detail=ResponseModel(
-                            status="error",
-                            error="",
-                            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                            message=f"Error reading file: {str(e)}"
-                        ).dict()
-                    )
-
                 data.add_field(
                     name="file",
                     value=buffered_file,
@@ -143,56 +113,36 @@ class S3Client(S3ClientABC):
                 )
                 params = {'path': f'/{user.id}/training/'}
                 async with session.post(cloud_url, data=data, params=params) as response:
-                    response.raise_for_status() # Raise an exception if the response status code is not 200
-                    return ResponseModel(
-                        status="success",
-                        body=response.status,
-                        status_code=status.HTTP_201_CREATED,
-                        message=f"User data successfully uploaded"
-                    )
-
-        except aiohttp.ClientError as e:
-            logging.error(f"Client error: {e} user_id: {user.id if user.id else 'unknown'}")
+                    response.raise_for_status()
+                    if response.status == 204:
+                        return {"success": True}
+        except FileNotFoundError as exp:
+            logging.error(
+                    f"File not found: {files.name} "
+                    f"user_id: {user.id if user.id else 'unknown'}"
+                )
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
+                status_code=status.HTTP_404_NOT_FOUND,
                 detail=ResponseModel(
                     status="error",
-                    error=str(e),
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    message=f"HTTP response error"
-                ).dict()
-            )
-        except aiohttp.ClientTimeout as e:
-            logging.error(f"TimeoutError error: {e} user_id: {user.id if user.id else 'unknown'}")
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=ResponseModel(
-                    status="error",
-                    error=str(e),
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    message=f"TimeoutError: Request timed out"
-                ).dict()
-            )
-        except aiohttp.http_exceptions.HttpProcessingError as e:
-            logging.error(f'HTTP processing error: {e}')
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=ResponseModel(
-                    status="error",
-                    error=str(e),
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    message=f"HTTP processing error"
+                    error=str(exp),
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    message=f"FileNotFoundError: File '{files.name}' not found."
                 ).dict()
             )
         except Exception as e:
-            logging.error(f'Unexpected error: {e}')
+            logging.error(f'Unexpected error s3: {e}')
+            if not response:
+                status_code = status.HTTP_400_BAD_REQUEST
+            else:
+                status_code = response.status
             raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
+                status_code=status_code,
                 detail=ResponseModel(
                     status="error",
                     error=str(e),
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    message=f"Unexpected error"
+                    status_code=status_code,
+                    message=""
                 ).dict()
             )
 
