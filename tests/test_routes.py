@@ -26,7 +26,7 @@ def fake_zip_file():
 @pytest.fixture
 def fake_user():
     """Return a fake user JSON string."""
-    return json.dumps({"id": "123465", "name": "test_user"})
+    return json.dumps({"id": "123465", "first_name": "test_user"})
 
 
 @pytest.fixture
@@ -37,7 +37,6 @@ def mock_s3_client():
     return mock
 
 
-@pytest.mark.asyncio
 async def test_upload_zip_success(fake_zip_file, fake_user):
     with patch("rest_api.routes.upload_zip_utils", new_callable=AsyncMock) as mock_upload_zip:
         mock_upload_zip.return_value = {"success": True}

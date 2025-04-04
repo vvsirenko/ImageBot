@@ -11,7 +11,7 @@ class StringsInput(BaseModel):
 class User(BaseModel):
     id: int | str
     first_name: str | None
-    last_name: str | None
+    last_name: str | None = None
     is_bot: bool = False
     is_premium: bool = False
     language_code: str | None = None
