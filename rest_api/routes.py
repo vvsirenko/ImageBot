@@ -70,7 +70,7 @@ async def upload_zip(
             status_code=status.HTTP_201_CREATED,
             message=f"User data successfully uploaded to "
                     f"external service {s3_client.service_name}"
-        ).dict()
+        ).model_dump()
     finally:
         if os.path.exists(temp_file_path):
             os.remove(temp_file_path)
