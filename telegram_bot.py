@@ -45,7 +45,15 @@ class ChatTelegramBot:
 
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         """Send message on `/start`."""
-        await self.add_user(user=update.message.from_user)
+        user = User(
+            id=update.effective_user.id,
+            first_name=update.effective_user.first_name,
+            last_name=update.effective_user.last_name,
+            username=update.effective_user.username,
+            is_premium=update.effective_user.is_premium,
+            language_code=update.effective_user.language_code,
+        )
+        await self.add_user(user=user)
 
         support_username = self.config["support_username"]
         support_link = f"https://t.me/{support_username}"
@@ -95,7 +103,7 @@ class ChatTelegramBot:
 
         return response.get("paid", False)
 
-    async def add_user(self, user) -> bool:
+    async def add_user(self, user: User) -> bool:
         response = await self.api_client.add_user(user=user)
         return response
 
