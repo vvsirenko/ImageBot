@@ -33,7 +33,7 @@ class ChatTelegramBot:
         self.photo_cache = []  # FIXME глобальный кэш для все пользователей, нужно че-то придумать. + инвалидаця
         self.api_client = api_client
         self._zip_service = ZipService(zip_creator)  # TODO to DI
-        self._caption_serivice = CaptionService(image_caption_generator)  # TODO to DI
+        self._caption_service = CaptionService(image_caption_generator)  # TODO to DI
 
     START_ROUTES = 1
     SAVE_PHOTO = 2
@@ -121,7 +121,7 @@ class ChatTelegramBot:
             await update.message.reply_text(
                 "Фотографии успешно отправлены. Ожидайте ответа от сервера...")
 
-            captions = [await self._caption_serivice.generate_caption(file_bytes) for file_bytes in files_of_bytes]
+            captions = [await self._caption_service.generate_caption(file_bytes) for file_bytes in files_of_bytes]
             user = User(  # TODO добавить ValueObject для юзера.
                 id=update.effective_user.id,
                 first_name=update.effective_user.first_name,
