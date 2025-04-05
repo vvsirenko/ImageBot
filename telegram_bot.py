@@ -1,5 +1,4 @@
 import base64
-import time
 from io import BytesIO
 
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
@@ -8,6 +7,8 @@ from telegram.ext import ContextTypes, ApplicationBuilder, CommandHandler, \
 from api_client.client import FastAPIClient
 
 import logging
+
+from application.main import zip_creator, image_caption_generator
 
 logging.basicConfig(level=logging.INFO)
 
@@ -20,12 +21,15 @@ class ChatTelegramBot:
         self.config = config
         self.max_photos = 3
         self.photo_count = 0
-        self.photo_casche = []
+        self.photo_cache = []  # FIXME глобальный кэш для все пользователей, нужно че-то придумать. + инвалидаця
         self.api_client = api_client
+        self._zip_creator = zip_creator
+        self._caption_generator = image_caption_generator
 
     START_ROUTES = 1
     SAVE_PHOTO = 2
     PHOTO_ROUTES = 3
+    CREATE_PAYMENT = 4
 
     # Callback data
     ONE, TWO, THREE, FOUR = range(4)
@@ -100,19 +104,26 @@ class ChatTelegramBot:
         return self.SAVE_PHOTO
 
     async def next_step(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-        if not self.photo_casche:
+        if not self.photo_cache:
             return
 
         try:
-            files_of_bytes = [BytesIO(await file.download_as_bytearray()) for file in self.photo_casche]
+            files_of_bytes = [BytesIO(await file.download_as_bytearray()) for file in self.photo_cache]
             await update.message.reply_text(
                 f"Фотографии успешно отправлены. Ожидайте ответа от сервера...")
-            response = await self.api_client.upload_zip(
+
+            captions = [await image_caption_generator.generate_caption(file_bytes) for file_bytes in files_of_bytes]
+            zip_archive = await self._zip_creator.create_zip_from_images(
                 files_of_bytes=files_of_bytes,
+                captions=captions,
+                user=update.message.from_user,
+            )
+            response = await self.api_client.upload_zip(
+                zip_archive=zip_archive,
                 user=update.message.from_user
             )
             if response:
-                await update.message.reply_text(f"Сохранено {len(self.photo_casche)} фото!")
+                await update.message.reply_text(f"Сохранено {len(self.photo_cache)} фото!")
             else:
                 await update.message.reply_text(f"Что-то пошло не так. Попробуйте еще раз.")
         except Exception as e:
@@ -123,7 +134,7 @@ class ChatTelegramBot:
             return
 
         file = await update.message.photo[-1].get_file()
-        self.photo_casche.append(file)
+        self.photo_cache.append(file)
 
         self.photo_count += 1
         text = f"Фотография {self.photo_count} сохранена. Осталось загрузить {self.max_photos - self.photo_count} фотографий."
