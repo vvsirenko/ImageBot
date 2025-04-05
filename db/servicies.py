@@ -1,5 +1,6 @@
 import uuid
 from typing import Final
+
 from fastapi.responses import JSONResponse
 
 
@@ -18,7 +19,7 @@ class Service:
             first_name: str,
             last_name: str,
             referral_link: str,
-            referrer_id: uuid.UUID | None = None
+            referrer_id: uuid.UUID | None = None,
     ) -> JSONResponse:
         result = await self._repository.add_user(
             tg_id=tg_id,
@@ -26,6 +27,6 @@ class Service:
             first_name=first_name,
             last_name=last_name,
             referral_link=referral_link,
-            referrer_id=referrer_id
+            referrer_id=referrer_id,
         )
         return result

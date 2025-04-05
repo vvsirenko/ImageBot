@@ -14,6 +14,6 @@ class AppConfig(BaseSettings):
          f"{os.environ.get('DB_NAME')}")
 
 
-@lru_cache()
+@lru_cache
 def get_app_config():
     return AppConfig()

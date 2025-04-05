@@ -1,13 +1,13 @@
 import asyncio
 import os
-import uvicorn
 
+import uvicorn
 from dotenv import load_dotenv
 from fastapi import FastAPI
 
 from api_client.client import FastAPIClient
-from telegram_bot import ChatTelegramBot
 from rest_api.routes import router as telegram_router
+from telegram_bot import ChatTelegramBot
 
 
 def create_bot():
@@ -18,10 +18,10 @@ def create_bot():
 
     # Setup configuration
     telegram_config = {
-        'token': os.environ.get('TELEGRAM_BOT_TOKEN', "7944054646:AAGbUNKVHhMCGlW4tMb4YmrbQS08atgYcsE"),
-        'timeweb_cloud_token': os.environ.get('TIMEWEB_CLOUD_TOKEN', ""),
-        'timeweb_cloud_url': os.environ.get('TIMEWEB_CLOUD_URL', ""),
-        'support_username': os.environ.get('SUPPORT_USERNAME', "")
+        "token": os.environ.get("TELEGRAM_BOT_TOKEN", "7944054646:AAGbUNKVHhMCGlW4tMb4YmrbQS08atgYcsE"),
+        "timeweb_cloud_token": os.environ.get("TIMEWEB_CLOUD_TOKEN", ""),
+        "timeweb_cloud_url": os.environ.get("TIMEWEB_CLOUD_URL", ""),
+        "support_username": os.environ.get("SUPPORT_USERNAME", ""),
     }
 
     telegram_bot = ChatTelegramBot(config=telegram_config,

@@ -1,19 +1,9 @@
-import pytest
-import io
-from io import BufferedReader
+from unittest.mock import MagicMock, patch
 
-from aioresponses import aioresponses
-from aiohttp.web_exceptions import HTTPException
 import fastapi
-from storage.client import S3Client
-
 import pytest
-import aiohttp
-import uuid
-import logging
-from unittest.mock import AsyncMock, MagicMock, patch
-from aioresponses import aioresponses
-from io import BytesIO
+
+from storage.client import S3Client
 
 
 @pytest.fixture

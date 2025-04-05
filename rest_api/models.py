@@ -1,15 +1,15 @@
-from typing import Optional, Dict, Any
-from typing import Final
 from datetime import datetime
+from typing import Any, Final
+
 from pydantic import BaseModel
 
 
 class ResponseModel(BaseModel):
     status: str
     status_code: int
-    body: Optional[Dict[str, Any]] = None
-    error: Optional[str] = None
-    message: Optional[str] = None
+    body: dict[str, Any] | None = None
+    error: str | None = None
+    message: str | None = None
 
 
 DATE_TO_STRING_FORMAT: Final[str] = "%Y-%m-%dT%H:%M:%S%z"
@@ -21,7 +21,7 @@ class BaseMessageModel(BaseModel):
 
     def fill_meta(self):
         self.meta.update(
-            {"date": datetime.now().strftime(DATE_TO_STRING_FORMAT)}
+            {"date": datetime.now().strftime(DATE_TO_STRING_FORMAT)},
         )
 
 

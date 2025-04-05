@@ -1,5 +1,6 @@
 import asyncio
 from concurrent.futures import ProcessPoolExecutor
+from io import BytesIO
 
 from libs.image_caption_generator.image_caption_generator import ImageCaptionGenerator
 
@@ -20,18 +21,19 @@ class AsyncImageCaptionGenerator:
         responsible for the actual caption creation logic.
 
     """
+
     def __init__(
             self,
             executor: ProcessPoolExecutor,
-            generator: ImageCaptionGenerator
+            generator: ImageCaptionGenerator,
     ):
         self._executor = executor
         self._generator = generator
 
-    async def generate_caption(self, file_bytes: bytes) -> str:
+    async def generate_caption(self, file_bytes: BytesIO) -> str:
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(
             self._executor,
             self._generator.get_caption_single_image,
-            file_bytes
+            file_bytes,
         )

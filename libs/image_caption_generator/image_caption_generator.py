@@ -1,7 +1,7 @@
 from io import BytesIO
 
 from PIL import Image
-from transformers import BlipProcessor, BlipForConditionalGeneration
+from transformers import BlipForConditionalGeneration, BlipProcessor
 
 
 class ImageCaptionGenerator:
@@ -11,10 +11,10 @@ class ImageCaptionGenerator:
         self.model = BlipForConditionalGeneration.from_pretrained(
             "Salesforce/blip-image-captioning-base")
 
-    def get_caption_single_image(self, file_bytes) -> str:
+    def get_caption_single_image(self, file_bytes: BytesIO) -> str:
         try:
             # Load and process image
-            raw_image = Image.open(BytesIO(file_bytes)).convert('RGB')
+            raw_image = Image.open(file_bytes).convert("RGB")
             # conditional image captioning
             inputs = self.processor(raw_image, return_tensors="pt")
 
@@ -25,12 +25,12 @@ class ImageCaptionGenerator:
             return caption
 
         except Exception as e:
-            return f"Error processing image: {str(e)}"
+            return f"Error processing image: {e!s}"
 
     def process_single_image(self, image_path: str) -> str:
         try:
             # Load and process image
-            raw_image = Image.open(image_path).convert('RGB')
+            raw_image = Image.open(image_path).convert("RGB")
             # conditional image captioning
             inputs = self.processor(raw_image, return_tensors="pt")
 
@@ -41,5 +41,5 @@ class ImageCaptionGenerator:
             return caption
 
         except Exception as e:
-            return f"Error processing image: {str(e)}"
+            return f"Error processing image: {e!s}"
 

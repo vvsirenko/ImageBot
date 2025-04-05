@@ -1,9 +1,8 @@
 import json
 import os
 
-from fastapi import APIRouter, Depends, UploadFile, Form, status, HTTPException
-
 from dotenv import load_dotenv
+from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile, status
 from pydantic import ValidationError
 
 from db.repositories import get_service
@@ -19,7 +18,7 @@ router = APIRouter()
 async def upload_zip(
         file: UploadFile,
         user: str = Form(...),
-        s3_client: S3ClientABC = Depends(get_s3_client)
+        s3_client: S3ClientABC = Depends(get_s3_client),
 ):
     user_data = json.loads(user)
     user = User(**user_data)
@@ -38,7 +37,7 @@ async def upload_zip(
         response = await upload_zip_utils(
             files=files,
             client=s3_client,
-            user=user
+            user=user,
         )
     except json.JSONDecodeError as exception:
         return ResponseModel(
@@ -46,7 +45,7 @@ async def upload_zip(
             status_code=exception.status_code if exception.status_code
             else status.HTTP_400_BAD_REQUEST,
             error=str(exception),
-            message=f"Invalid JSON format. Failed to parse JSON user: {user}"
+            message=f"Invalid JSON format. Failed to parse JSON user: {user}",
         ).dict()
     except ValidationError as exception:
         return ResponseModel(
@@ -54,14 +53,14 @@ async def upload_zip(
             status_code=exception.status_code if exception.status_code
             else status.HTTP_400_BAD_REQUEST,
             error=str(exception),
-            message=f"Validation error. Invalid user data user: {user}"
+            message=f"Validation error. Invalid user data user: {user}",
         ).dict()
     except Exception as exception:
         return ResponseModel(
             status="error",
             status_code=exception.status_code
             if exception.status_code else status.HTTP_400_BAD_REQUEST,
-            error=str(exception)
+            error=str(exception),
         ).dict()
     else:
         return ResponseModel(
@@ -69,7 +68,7 @@ async def upload_zip(
             body={"response": response},
             status_code=status.HTTP_201_CREATED,
             message=f"User data successfully uploaded to "
-                    f"external service {s3_client.service_name}"
+                    f"external service {s3_client.service_name}",
         ).model_dump()
     finally:
         if os.path.exists(temp_file_path):
@@ -78,19 +77,19 @@ async def upload_zip(
 
 async def upload_zip_utils(files: dict, client: S3ClientABC,
                            user: User) -> dict:
-    load_dotenv() #todo remove in prod
+    load_dotenv() #TODO remove in prod
 
     return await client.upload_zip(
         files=files,
         cloud_url=os.environ.get("TIMEWEB_CLOUD_URL"),
-        user=user
+        user=user,
     )
 
 
 @router.get("/payment_status/{user_id}")
 async def payment_status(
         user_id: int,
-        service: Service = Depends(get_service)
+        service: Service = Depends(get_service),
 ):
     """Fetch the user's payment status from the database."""
     try:
@@ -98,16 +97,15 @@ async def payment_status(
 
         if result:
             return {"payment_status": "true"}
-        else:
-            return {"payment_status": "false"}
+        return {"payment_status": "false"}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Database error: {e!s}")
 
 
 @router.post("/add_user/", response_model=dict)
 async def add_user(
     user: UserCreateRequest,
-    service: Service = Depends(get_service)
+    service: Service = Depends(get_service),
 ):
     try:
         user = await service.add_user(
@@ -122,4 +120,4 @@ async def add_user(
         return {"status": True}
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing request: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error processing request: {e!s}")

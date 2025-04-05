@@ -19,13 +19,13 @@ class User(BaseModel):
 
 
 class UserCreateRequest(BaseModel):
-    tg_id: int = Field(alias='id')
+    tg_id: int = Field(alias="id")
     first_name: str | None = None
     last_name: str | None = None
     username: str | None = None
     referral_link: str | None = Field(
         default_factory=lambda data:
-        f"https://t.me/fast_market_api_bot?start={data['tg_id']}"
+        f"https://t.me/fast_market_api_bot?start={data['tg_id']}",
     )
     referrer_id: UUID = Field(default=uuid.uuid4())
 
