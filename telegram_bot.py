@@ -71,7 +71,7 @@ class ChatTelegramBot:
     async def check_payment_status(self, user_id: int, update: Update) -> bool:
         """Check the user's payment status from FastAPI."""
         response = await self.api_client.user_payment_info(
-            user=update.message.from_user
+            user_data=update.message.from_user
         )
 
         if response.status == 200:
