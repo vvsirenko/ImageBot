@@ -9,6 +9,7 @@ from api_client.client import FastAPIClient
 import logging
 
 from application.main import zip_creator, image_caption_generator
+from models.api_model import User
 
 logging.basicConfig(level=logging.INFO)
 
@@ -75,20 +76,21 @@ class ChatTelegramBot:
     async def check_payment_status(self, user_id: int, update: Update) -> bool:
         """Check the user's payment status from FastAPI."""
         response = await self.api_client.user_payment_info(
-            user_data=update.message.from_user
+            user=User(
+                id=update.effective_user.id,
+                first_name=update.effective_user.first_name,
+                last_name=update.effective_user.last_name,
+                username=update.effective_user.username,
+                is_premium=update.effective_user.is_premium,
+                language_code=update.effective_user.language_code,
+            )
         )
 
-        if response.status == 200:
-            data = await response.json()
-            return data.get("paid", False)
-        return False
+        return response.get("paid", False)
 
     async def add_user(self, user) -> bool:
         response = await self.api_client.add_user(user=user)
-        if response.status == 200:
-            return True
-        else:
-            return False
+        return response
 
     async def begin(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         query = update.callback_query

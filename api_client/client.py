@@ -18,10 +18,9 @@ class FastAPIClient:
     async def upload_zip(self, zip_archive: BytesIO, user) -> bool:
         return await self.__upload_zip(zip_archive, user)
 
-    async def user_payment_info(self, user_data) -> dict:
+    async def user_payment_info(self, user: User) -> dict:
         try:
             async with aiohttp.ClientSession() as session:
-                user = User(**user_data.to_dict())
 
                 async with session.get(
                         url=f"{self.api_url}/payment_status/{user.id}",
@@ -32,7 +31,7 @@ class FastAPIClient:
         except Exception as e:
             logging.error(f'Unexpected error: {e}. User_id: {user.id}')
 
-    async def add_user(self, user) -> dict:
+    async def add_user(self, user) -> bool:
         try:
             async with aiohttp.ClientSession() as session:
                 user = jsonable_encoder(

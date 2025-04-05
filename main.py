@@ -18,7 +18,7 @@ def create_bot():
 
     # Setup configuration
     telegram_config = {
-        'token': os.environ.get('TELEGRAM_BOT_TOKEN', ""),
+        'token': os.environ.get('TELEGRAM_BOT_TOKEN', "7944054646:AAGbUNKVHhMCGlW4tMb4YmrbQS08atgYcsE"),
         'timeweb_cloud_token': os.environ.get('TIMEWEB_CLOUD_TOKEN', ""),
         'timeweb_cloud_url': os.environ.get('TIMEWEB_CLOUD_URL', ""),
         'support_username': os.environ.get('SUPPORT_USERNAME', "")
