@@ -1,6 +1,7 @@
 [tool.ruff]
 line-length = 120
 target-version = "py312"
+exclude = ["alembic"]  # Исключаем директорию alembic
 
 [tool.ruff.lint]
 select = ["ALL"]

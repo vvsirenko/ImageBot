@@ -1,11 +1,13 @@
 import uuid
 from typing import Final
 
-from fastapi.responses import JSONResponse
+from starlette.responses import JSONResponse
+
+from db.repositories import PQSLRepository
 
 
-class Service:
-    def __init__(self, repository):
+class UserService:
+    def __init__(self, repository: PQSLRepository):
         self._repository: Final = repository
 
     async def payment_status(self,  user_id: int) -> JSONResponse:
