@@ -128,7 +128,7 @@ class S3Client(S3ClientABC):
                     error=str(exp),
                     status_code=status.HTTP_404_NOT_FOUND,
                     message=f"FileNotFoundError: File '{files.name}' not found."
-                ).dict()
+                ).model_dump()
             )
         except Exception as e:
             logging.error(f'Unexpected error s3: {e}')
@@ -143,7 +143,7 @@ class S3Client(S3ClientABC):
                     error=str(e),
                     status_code=status_code,
                     message=""
-                ).dict()
+                ).model_dump()
             )
 
     async def get_file_from_tg(self, file_url: str):
