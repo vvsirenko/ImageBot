@@ -34,7 +34,7 @@ class FastAPIClient:
         try:
             async with aiohttp.ClientSession() as session:
                 user = jsonable_encoder(
-                    UserCreateRequest(**user.to_dict()))
+                    UserCreateRequest(**user.model_dump()))
                 async with session.post(
                         url=f"{self.api_url}/add_user/", json=user,
                 ) as response:

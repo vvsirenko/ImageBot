@@ -8,10 +8,7 @@ load_dotenv()
 
 
 class AppConfig(BaseSettings):
-    DATABASE_URL: str = \
-        (f"postgresql+asyncpg://{os.environ.get('DB_LOGIN')}:"
-         f"{os.environ.get('DB_PASSWORD')}@{os.environ.get('DB_HOST')}/"
-         f"{os.environ.get('DB_NAME')}")
+    DATABASE_URL: str = f"postgresql+asyncpg://{os.environ.get('DB_LOGIN')}:{os.environ.get('DB_PASSWORD')}@{os.environ.get('DB_HOST')}/{os.environ.get('DB_NAME')}"
 
 
 @lru_cache

@@ -16,13 +16,13 @@ class User(Base):
     first_name = Column(String, nullable=True)
     last_name = Column(String, nullable=True)
     referral_link = Column(String, unique=True, nullable=False)
-    referrer_id = Column(UUID(as_uuid=True), ForeignKey("users.user_id"), nullable=True)
+    referrer_id = Column(UUID(as_uuid=True), nullable=True)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relationships
     # referrals = relationship('Referral', back_populates='referrer')
-    referred_by = relationship("User", remote_side=[user_id], backref="referred_users")
+    # referred_by = relationship("User", remote_side=[user_id], backref="referred_users")
 
 
 payment_status_enum = Enum("pending", "completed", "failed",
