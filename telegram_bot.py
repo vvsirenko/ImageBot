@@ -16,8 +16,8 @@ from telegram.ext import (
 from api_client.client import FastAPIClient
 from application.main import image_caption_generator, zip_creator
 from models.api_model import User
-from services.caption_generator.caption_service import CaptionService
-from services.zip_creator.zip_service import ZipService
+from services.caption_service.caption_service import CaptionService
+from services.zip_service.zip_service import ZipService
 
 logging.basicConfig(level=logging.INFO)
 
