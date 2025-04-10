@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile, status
 from pydantic import ValidationError
 
 from ioc.dependencies import user_service
-from models.api_model import User, UserCreateRequest
+from domain.dto import User, CreateUserDTO
 from rest_api.models import ResponseModel
 from services.user_service.user_service import UserService
 from storage.client import S3ClientABC, get_s3_client
@@ -88,7 +88,7 @@ async def upload_zip_utils(files: dict, client: S3ClientABC,
 
 @router.get("/payment_status/{user_id}")
 async def payment_status(
-        user_id: int,
+        user_id: int | None,
         service: UserService = Depends(user_service),
 ):
     """Fetch the user's payment status from the database."""
@@ -104,7 +104,7 @@ async def payment_status(
 
 @router.post("/add_user/", response_model=dict)
 async def add_user(
-    user: UserCreateRequest,
+    user: CreateUserDTO,
     service: UserService = Depends(user_service),
 ):
     try:

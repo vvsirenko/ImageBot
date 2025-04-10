@@ -15,7 +15,7 @@ from telegram.ext import (
 
 from api_client.client import FastAPIClient
 from application.main import image_caption_generator, zip_creator
-from models.api_model import User
+from domain.dto import User, UserTgModel
 from services.caption_service.caption_service import CaptionService
 from services.zip_service.zip_service import ZipService
 
@@ -45,15 +45,9 @@ class ChatTelegramBot:
 
     async def start(self, update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         """Send message on `/start`."""
-        user = User(
-            id=update.effective_user.id,
-            first_name=update.effective_user.first_name,
-            last_name=update.effective_user.last_name,
-            username=update.effective_user.username,
-            is_premium=update.effective_user.is_premium,
-            language_code=update.effective_user.language_code,
-        )
-        await self.add_user(user=user)
+        user = UserTgModel.from_update(update)
+        data = user.to_dict()
+        await self.add_user(user=data)
 
         support_username = self.config["support_username"]
         support_link = f"https://t.me/{support_username}"
@@ -90,20 +84,12 @@ class ChatTelegramBot:
 
     async def check_payment_status(self, user_id: int, update: Update) -> bool:
         """Check the user's payment status from FastAPI."""
-        response = await self.api_client.user_payment_info(
-            user=User(
-                id=update.effective_user.id,
-                first_name=update.effective_user.first_name,
-                last_name=update.effective_user.last_name,
-                username=update.effective_user.username,
-                is_premium=update.effective_user.is_premium,
-                language_code=update.effective_user.language_code,
-            ),
-        )
-
+        user = UserTgModel.from_update(update)
+        data = user.to_dict()
+        response = await self.api_client.user_payment_info(user=data)
         return response.get("paid", False)
 
-    async def add_user(self, user: User) -> bool:
+    async def add_user(self, user: dict) -> bool:
         response = await self.api_client.add_user(user=user)
         return response
 
@@ -130,18 +116,11 @@ class ChatTelegramBot:
                 "Фотографии успешно отправлены. Ожидайте ответа от сервера...")
 
             captions = [await self._caption_service.generate_caption(file_bytes) for file_bytes in files_of_bytes]
-            user = User(  # TODO добавить ValueObject для юзера.
-                id=update.effective_user.id,
-                first_name=update.effective_user.first_name,
-                last_name=update.effective_user.last_name,
-                username=update.effective_user.username,
-                is_premium=update.effective_user.is_premium,
-                language_code=update.effective_user.language_code,
-            )
+            user = UserTgModel.from_update(update).to_dict()
             zip_archive = await self._zip_service.create_zip(
                 files_of_bytes=files_of_bytes,
                 captions=captions,
-                user=user,
+                user=user
             )
             response = await self.api_client.upload_zip(
                 zip_archive=zip_archive,

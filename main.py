@@ -7,7 +7,10 @@ from fastapi import FastAPI
 
 from api_client.client import FastAPIClient
 from rest_api.routes import router as telegram_router
-from telegram_bot import ChatTelegramBot
+from services.zip_service.zip_service import ZipService
+from application.main import image_caption_generator, zip_creator
+from services.caption_service.caption_service import CaptionService
+from telegram_bot.main import ChatTelegramBot
 
 
 def create_bot():
@@ -24,8 +27,13 @@ def create_bot():
         "support_username": os.environ.get("SUPPORT_USERNAME", ""),
     }
 
-    telegram_bot = ChatTelegramBot(config=telegram_config,
-                                   api_client=api_client)
+    telegram_bot = ChatTelegramBot(
+        config=telegram_config,
+        api_client=api_client,
+        zip_service=ZipService(zip_creator),
+        caption_service=CaptionService(image_caption_generator),
+        max_photos=3
+    )
     return telegram_bot
 
 
@@ -33,7 +41,7 @@ app = FastAPI()
 app.include_router(telegram_router)
 
 bot: ChatTelegramBot = create_bot()
-application = bot._application()
+application = bot.build()
 
 
 async def main():

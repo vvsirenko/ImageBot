@@ -3,7 +3,7 @@ import zipfile
 from concurrent.futures import ProcessPoolExecutor
 from io import BytesIO
 
-from models.api_model import User
+from domain.dto import User
 
 
 class ZipCreator:
@@ -18,7 +18,7 @@ class ZipCreator:
             *,
             files_of_bytes: list[BytesIO],
             captions: list[str],
-            user: User,
+            user: dict,
     ) -> BytesIO:
         loop = asyncio.get_running_loop()
         zip_bytes = await loop.run_in_executor(
@@ -26,7 +26,7 @@ class ZipCreator:
             self._create_zip,
             files_of_bytes,
             captions,
-            user,
+            user
         )
 
         return zip_bytes

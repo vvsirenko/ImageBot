@@ -10,7 +10,7 @@ class UserService:
     def __init__(self, repository: PQSLRepository):
         self._repository: Final = repository
 
-    async def payment_status(self,  user_id: int) -> JSONResponse:
+    async def payment_status(self,  user_id: int | None) -> JSONResponse:
         result = await self._repository.payment_status(user_id)
         return result
 
