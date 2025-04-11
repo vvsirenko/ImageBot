@@ -25,20 +25,13 @@ class AsyncDataBase:
         )
 
     @asynccontextmanager
-    async def session_scope(self):
-        """Контекстный менеджер для управления сессией и транзакциями.
-        """
-        session = self._get_session()
-        try:
-            yield session
-        except asyncio.exceptions.TimeoutError:
-            await session.rollback()
-            raise Exception("Database timeout error")
-        except Exception as e:
-            await session.rollback()
-            raise e
-        finally:
-            await session.close()
+    async def get_session(self):
+        """Контекстный менеджер для управления сессией и транзакциями."""
+        async with self._get_session() as session:
+            try:
+                yield session
+            except asyncio.exceptions.TimeoutError:
+                raise Exception("Database timeout error")
+            except Exception as e:
+                raise e
 
-    def _get_session(self) -> AsyncSession:
-        return self._session()

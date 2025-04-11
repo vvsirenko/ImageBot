@@ -8,7 +8,7 @@ from storage.client import S3ClientABC, get_s3_client
 
 
 async def async_session():
-    async with database.session_scope() as session:
+    async with database.get_session() as session:
         yield session
 
 
