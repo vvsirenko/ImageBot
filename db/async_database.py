@@ -27,7 +27,7 @@ class AsyncDataBase:
     @asynccontextmanager
     async def get_session(self):
         """Контекстный менеджер для управления сессией и транзакциями."""
-        async with self._get_session() as session:
+        async with self._session() as session:
             try:
                 yield session
             except asyncio.exceptions.TimeoutError:
