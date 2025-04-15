@@ -102,6 +102,22 @@ async def payment_status(
         raise HTTPException(status_code=500, detail=f"Database error: {e!s}")
 
 
+@router.get("/users/{user_id}")
+async def fetch_profile(
+        user_id: int | None,
+        service: UserService = Depends(user_service),
+):
+    """Fetch the user's payment status from the database."""
+    try:
+        result = await service.fetch_profile(user_id)
+
+        if result:
+            return {"fetch_profile": "true"}
+        return {"fetch_profile": "false"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Database error: {e!s}")
+
+
 @router.post("/add_user/", response_model=dict)
 async def add_user(
     user: CreateUserDTO,

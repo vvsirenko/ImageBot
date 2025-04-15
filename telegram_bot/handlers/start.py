@@ -1,13 +1,14 @@
 from telegram import InlineKeyboardButton, InlineKeyboardMarkup, Update
 from telegram.ext import ContextTypes
-from domain.dto import UserTgModel
+
 from telegram_bot.states import BotStates
 from telegram_bot.texts import texts
 
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    user = UserTgModel.from_update(update)
-    await context.bot_data['api_client'].add_user(user.to_dict())
+async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    data: dict = parse_user(update)
+    user = TelegramUser(**data)
+    await user.fetch_profile(user, repository=None)
 
     keyboard = [
         [InlineKeyboardButton("Как это работает?", callback_data="how_it_works")],

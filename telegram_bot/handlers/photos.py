@@ -4,6 +4,7 @@ from telegram.ext import ContextTypes
 from domain.dto import UserTgModel
 from telegram_bot.states import BotStates
 from telegram_bot.texts import texts
+from telegram_bot.user_stage import UserStateAggregate
 
 
 async def save(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -11,6 +12,15 @@ async def save(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         return BotStates.SAVE_PHOTO
 
     file = await update.message.photo[-1].get_file()
+
+
+    # Загружаем или создаём агрегат состояния
+    # state_data = container.user_data_repository.get_user_state(update.effective_user.id)
+    # user_state = UserStateAggregate(user_id=update.effective_user.id)
+    # user_state.state = state_data["state"]
+    # user_state.photos = state_data["photos"] # todo как управлять стейтами?
+    # user_state.add_photo(file.file_id) # ????
+
     photos = context.user_data.get("photos", []) #todo fix it как долго тут будут храниться данные и не лучше ли юзать Redis?
     photos.append(file)
     context.user_data["photos"] = photos
@@ -18,7 +28,6 @@ async def save(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     photo_count = len(photos)
     max_photos = context.bot_data.get("max_photos", 10)
     remaining = max_photos - photo_count
-
     text = texts["photo_saved"].format(count=photo_count, remaining=remaining)
 
     if "status_message" in context.user_data:
@@ -28,7 +37,6 @@ async def save(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
     if photo_count >= max_photos:
         return await next_step(update, context)
-
     return BotStates.SAVE_PHOTO
 
 
@@ -67,3 +75,24 @@ async def next_step(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         await update.message.reply_text(texts["exception"])
 
     return BotStates.START
+
+
+async def handlerE(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    container = context.bot_data["container"]
+    file = await update.message.photo[-1].get_file()
+    file_id = file.file_id
+
+    # Загружаем или создаём агрегат состояния
+    state_data = container.user_data_repository.get_user_state(update.effective_user.id)
+    user_state = UserStateAggregate(user_id=update.effective_user.id)
+    user_state.state = state_data["state"]
+    user_state.photos = state_data["photos"]
+
+    user_state.add_photo(file_id)
+
+    # Сохраняем
+    container.user_data_repository.save_state(user_state)
+    container.user_data_repository.save_events(user_state.user_id, user_state.events)
+
+    await update.message.reply_text("Фото сохранено. Отправьте ещё.")
+    return BotStates.SAVE_PHOTO
