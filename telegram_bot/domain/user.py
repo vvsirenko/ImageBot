@@ -1,90 +1,22 @@
-from dependency import inject
+from pydantic import BaseModel, Field, PlainValidator
+from typing import Optional, Annotated
 
-from domain.dto import UserTgModel
-
-from pydantic import BaseModel, Field, validator
-from typing import Optional
-from pydantic.errors import StrRegexError
+from telegram_bot.user_repository import AbcUserRepository
 
 
-class UserId(int):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
+UserId = Annotated[int, PlainValidator(lambda v: v if isinstance(v, int) and v > 0 else ValueError("UserId must be a positive integer"))]
 
-    @classmethod
-    def validate(cls, v):
-        if not isinstance(v, int):
-            raise TypeError("UserId must be an integer")
-        if v <= 0:
-            raise ValueError("UserId must be a positive integer")
-        return cls(v)
+FirstName = Annotated[str, PlainValidator(lambda v: v.strip() if isinstance(v, str) and v.strip() else ValueError("FirstName must be a non-empty string"))]
 
+LastName = Annotated[str, PlainValidator(lambda v: v.strip() if isinstance(v, str) else ValueError("LastName must be a string"))]
 
-class FirstName(str):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
+Username = Annotated[str, PlainValidator(lambda v: v if isinstance(v, str) and v.startswith("@") else ValueError("Username must start with '@'"))]
 
-    @classmethod
-    def validate(cls, v):
-        if not isinstance(v, str):
-            raise TypeError("FirstName must be a string")
-        if len(v.strip()) == 0:
-            raise ValueError("FirstName cannot be empty")
-        return cls(v.strip())
+IsPremium = Annotated[bool, PlainValidator(lambda v: bool(v) if isinstance(v, bool) else ValueError("IsPremium must be a boolean"))]
 
+IsBot = Annotated[bool, PlainValidator(lambda v: bool(v) if isinstance(v, bool) else ValueError("IsBot must be a boolean"))]
 
-class LastName(str):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, v):
-        if v is None:
-            return None
-        if not isinstance(v, str):
-            raise TypeError("LastName must be a string")
-        return cls(v.strip())
-
-
-class Username(str):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, v):
-        if not isinstance(v, str):
-            raise TypeError("Username must be a string")
-        if not v.startswith('@'):
-            raise ValueError("Username must start with '@'")
-        return cls(v)
-
-
-class IsPremium(bool):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, v):
-        return bool(v)
-
-
-class LanguageCode(str):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
-
-    @classmethod
-    def validate(cls, v):
-        if not isinstance(v, str):
-            raise TypeError("LanguageCode must be a string")
-        if len(v) != 2:
-            raise ValueError("LanguageCode must be a 2-letter code")
-        return cls(v.lower())
+LanguageCode = Annotated[str, PlainValidator(lambda v: v.lower() if isinstance(v, str) and len(v) == 2 else ValueError("LanguageCode must be 2-letter string"))]
 
 
 class TelegramUser(BaseModel):
@@ -93,14 +25,16 @@ class TelegramUser(BaseModel):
     first_name: Optional[FirstName] = Field(default=None)
     last_name: Optional[LastName] = Field(default=None)
     username: Optional[Username] = Field(default=None)
-    is_premium: Optional[IsPremium] = Field(default=None)
+    is_premium: Optional[IsPremium] = Field(default=False)
     language_code: Optional[LanguageCode] = Field(default=None)
+    is_bot: Optional[IsBot] = Field(default=False)
 
     def to_dict(self) -> dict:
         return self.dict(exclude_none=True)
 
-    async def fetch_profile(self, repo):
-        data = await repo.fetch_profile(self.user_id)
+    async def fetch_profile(self, repo: AbcUserRepository) -> dict:
+        # TODO: check if user is in db, if not, add it, decide how to handle this case
+        data = await repo.fetch_profile(self.id)
         if not data:
-            await self.repo.add_user(self.user_data)
+            await repo.add_user(self.to_dict())
 

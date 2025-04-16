@@ -1,10 +1,6 @@
 import abc
+from io import BytesIO
 from typing import Any
-
-from telegram import Update
-
-from domain.dto import UserTgModel
-from telegram_bot.domain.user import User
 
 
 class UserService:

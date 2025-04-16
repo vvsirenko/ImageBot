@@ -1,10 +1,23 @@
+import abc
+
 import aiohttp
-import requests
 import logging
+
+
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
 
-class UserRepository:
+class AbcUserRepository(abc.ABC):
+    @abc.abstractmethod
+    async def add_user(self, user: dict) -> bool:
+        ...
+
+    @abc.abstractmethod
+    async def fetch_profile(self, user_id: str) -> bool:
+        ...
+
+
+class UserRepository(AbcUserRepository):
     def __init__(self, base_url: str):
         self.base_url = base_url
 

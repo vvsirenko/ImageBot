@@ -30,15 +30,10 @@ def update():
 
 @pytest.fixture
 def context():
-    container = Container(
-        config={},
-        user_service=UserService(UserRepository("")),
-        zip_service=None,
-        caption_service=None,
-    )
+    user_repository = UserRepository("http://")
     context = MagicMock(spec=ContextTypes.DEFAULT_TYPE)
     context.bot_data = {
-        "container": container,
+        "user_repository": user_repository,
         "support_url": "https://t.me/support"
     }
     return context

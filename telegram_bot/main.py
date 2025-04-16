@@ -17,6 +17,7 @@ from telegram_bot.handlers import start, how_it_works, begin, end, photos
 from telegram_bot.states import BotStates
 
 from telegram_bot.containers import Container
+from telegram_bot.user_repository import AbcUserRepository
 from telegram_bot.user_service import UserService
 
 logging.basicConfig(level=logging.INFO)
@@ -26,27 +27,25 @@ class ChatTelegramBot:
     def __init__(
             self,
             config: dict,
-            user_service: UserService,
             zip_service: ZipService,
             caption_service: CaptionService,
-            max_photos: int
+            max_photos: int,
+            user_repository: AbcUserRepository
     ):
         self.config = config
         self.max_photos = max_photos
         self.user_service = UserService
         self._zip_service = zip_service
         self._caption_service = caption_service
-        self.container = Container(config, user_service, zip_service,
-                                   caption_service)
+        self.user_repository = user_repository
 
     def build(self):
         app = ApplicationBuilder().token(self.config["token"]).build()
 
-        app.bot_data["container"] = self.container
-
         # зависимости
         app.bot_data["support_url"] = f"https://t.me/{self.config['support_username']}"
         app.bot_data["max_photos"] = self.max_photos
+        app.bot_data["user_repository"] = self.user_repository
         # app.bot_data["api_client"] = self.api_client
         # app.bot_data["zip_service"] = self._zip_service
         # app.bot_data["caption_service"] = self._caption_service

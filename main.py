@@ -33,10 +33,10 @@ def create_bot():
 
     telegram_bot = ChatTelegramBot(
         config=telegram_config,
-        user_service=user_service,
         zip_service=ZipService(zip_creator),
         caption_service=CaptionService(image_caption_generator),
-        max_photos=3
+        max_photos=3,
+        user_repository=user_repository
     )
     return telegram_bot
 
