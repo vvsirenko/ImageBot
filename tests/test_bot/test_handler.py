@@ -2,10 +2,11 @@ from unittest.mock import MagicMock, AsyncMock
 
 import pytest
 from telegram.ext import ContextTypes
-from telegram import User, InlineKeyboardMarkup
+from telegram import User, InlineKeyboardMarkup, CallbackQuery
 
 from telegram_bot.containers import Container
-from telegram_bot.handlers.start import handler
+from telegram_bot.handlers.start import handler as start_handler
+from telegram_bot.handlers.how_it_works import handler as how_it_works_handler
 from telegram_bot.states import BotStates
 from telegram_bot.user_repository import UserRepository
 from telegram_bot.user_service import UserService
@@ -25,6 +26,7 @@ def update():
         last_name='Иванов',
         username='ivanovii'
     )
+    update.callback_query = AsyncMock()
     return update
 
 
@@ -40,7 +42,7 @@ def context():
 
 
 async def test_start_handler(context, update):
-    result = await handler(update, context)
+    result = await start_handler(update, context)
 
     args, kwargs = update.message.reply_text.call_args
     assert "text" in kwargs
@@ -54,3 +56,13 @@ async def test_start_handler(context, update):
 
     assert result == BotStates.START
     assert context.user_data["profile"] is not None
+
+async def test_how_it_work_handler(context, update):
+    result = await how_it_works_handler(update, context)
+
+    args, kwargs = update.callback_query.edit_message_text.call_args
+    assert "text" in kwargs
+
+    text = kwargs["text"]
+    assert text is not None and  isinstance(text, str)
+    assert result == BotStates.PHOTO_PROCESSING

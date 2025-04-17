@@ -8,6 +8,5 @@ from telegram_bot.texts import texts
 async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     query = update.callback_query
     await query.answer()
-
     await query.edit_message_text(text=texts["how_it_works"])
     return BotStates.PHOTO_PROCESSING
