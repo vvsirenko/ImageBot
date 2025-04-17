@@ -38,4 +38,3 @@ class TelegramUser(BaseModel):
         if not data:
             await repo.add_user(self.to_dict())
 
-
