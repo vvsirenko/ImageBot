@@ -91,3 +91,20 @@ class PQSLRepository(AbsDBRepository):
             raise Exception("Failed to add user due to a database constraint violation.")
         except Exception as e:
             raise Exception(f"Database error: {e!s}")
+
+    @exception_handler
+    async def fetch_profile(self, user_id: int):
+        try:
+            statement = select(User).where(User.tg_id == user_id)
+            result = await self._session.execute(statement)
+            records = result.scalars().all()
+            if not records:
+                return None
+            if len(records) > 1:
+                raise Exception(f"Found multiple users with tg_id={user_id}")
+            return records[0]
+        except IntegrityError as e:
+            raise Exception(
+                "Failed to fetch_profile due to a database constraint violation.") from e
+        except Exception as e:
+            raise Exception(f"Database error: {e!s}") from e

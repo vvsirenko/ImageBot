@@ -32,3 +32,7 @@ class UserService:
             referrer_id=referrer_id,
         )
         return result
+
+    async def fetch_profile(self, user_id: int) -> JSONResponse:
+        result = await self._repository.fetch_profile(user_id)
+        return result

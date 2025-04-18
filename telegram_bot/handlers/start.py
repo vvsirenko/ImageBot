@@ -25,6 +25,6 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
     await update.message.reply_text(
         text=texts["start_message"],
-        reply_markup=reply_markup,
+        reply_markup=reply_markup
     )
     return BotStates.START

@@ -3,6 +3,7 @@ import abc
 import aiohttp
 import logging
 
+from fal_client import result
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 
@@ -33,6 +34,7 @@ class UserRepository(AbcUserRepository):
             logging.exception(
                 f"Unexpected error: {e}. User_id: {user.get('id', None)}"
             )
+            return None
 
     async def fetch_profile(self, user_id: str) -> bool:
         try:
@@ -41,9 +43,16 @@ class UserRepository(AbcUserRepository):
                         url=f"{self.base_url}/users/{user_id}"
                 ) as response:
                     response.raise_for_status()
-                    return True
+                    result = await response.json()
+                    if "fetch_profile" in result and result["fetch_profile"] == "true":
+                        return True
+                    else:
+                        return False
         except Exception as e:
             logging.exception(
                 f"Unexpected error: {e}. User_id: {user_id}"
             )
+            return None
+
+
 

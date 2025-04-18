@@ -10,7 +10,7 @@ FirstName = Annotated[str, PlainValidator(lambda v: v.strip() if isinstance(v, s
 
 LastName = Annotated[str, PlainValidator(lambda v: v.strip() if isinstance(v, str) else ValueError("LastName must be a string"))]
 
-Username = Annotated[str, PlainValidator(lambda v: v if isinstance(v, str) and v.startswith("@") else ValueError("Username must start with '@'"))]
+Username = Annotated[str, PlainValidator(lambda v: v if isinstance(v, str) else ValueError("Username must be a string"))]
 
 IsPremium = Annotated[bool, PlainValidator(lambda v: bool(v) if isinstance(v, bool) else ValueError("IsPremium must be a boolean"))]
 

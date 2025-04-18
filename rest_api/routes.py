@@ -85,7 +85,6 @@ async def upload_zip_utils(files: dict, client: S3ClientABC,
         user=user,
     )
 
-
 @router.get("/payment_status/{user_id}")
 async def payment_status(
         user_id: int | None,
@@ -107,10 +106,8 @@ async def fetch_profile(
         user_id: int | None,
         service: UserService = Depends(user_service),
 ):
-    """Fetch the user's payment status from the database."""
     try:
         result = await service.fetch_profile(user_id)
-
         if result:
             return {"fetch_profile": "true"}
         return {"fetch_profile": "false"}
