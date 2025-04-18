@@ -61,7 +61,10 @@ class ChatTelegramBot:
                     MessageHandler(filters.PHOTO, photos.save),
                 ]
             },
-            fallbacks=[MessageHandler(filters.TEXT & ~filters.COMMAND, end.handler)],
+            fallbacks=[
+                CommandHandler("start", start.handler),
+                MessageHandler(filters.TEXT & ~filters.COMMAND, end.handler),
+            ],
             per_message=False,
         )
         app.add_handler(conv_handler)
