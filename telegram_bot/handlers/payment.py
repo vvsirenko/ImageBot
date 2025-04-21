@@ -16,15 +16,8 @@ async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     data: dict = parse_user(update)
     user: TelegramUser = TelegramUser(**data)
     repository: AbcUserRepository = context.bot_data["user_repository"]
-    payment_info = await user.fetch_payment_info(repo=repository)
-
-    if not payment_info:
-        keyboard = [
-            [InlineKeyboardButton("Оплатить", callback_data="do_payment")]
-        ]
-        reply_markup = InlineKeyboardMarkup(keyboard)
-        await query.edit_message_text(text=texts["no_payment"], reply_markup=reply_markup)
-        return BotStates.CREATE_PAYMENT
-
-    await query.edit_message_text(text=texts["send_photos"])
+    # UseCase payment
+    await query.edit_message_text(
+        text=texts["do_payment"]
+    )
     return BotStates.SAVE_PHOTO

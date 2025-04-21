@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile, status
 from pydantic import ValidationError
 
+from domain.models import BaseResponse
 from ioc.dependencies import user_service
 from domain.dto import User, CreateUserDTO
 from rest_api.models import ResponseModel
@@ -85,7 +86,7 @@ async def upload_zip_utils(files: dict, client: S3ClientABC,
         user=user,
     )
 
-@router.get("/payment_status/{user_id}")
+@router.get("/payment_info/{user_id}")
 async def payment_status(
         user_id: int | None,
         service: UserService = Depends(user_service),
@@ -93,12 +94,11 @@ async def payment_status(
     """Fetch the user's payment status from the database."""
     try:
         result = await service.payment_status(user_id)
-
-        if result:
-            return {"payment_status": "true"}
-        return {"payment_status": "false"}
+        return BaseResponse.ok(data=bool(result), message="Check payment_info")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {e!s}")
+        return BaseResponse.fail(
+            error=f"Database error: {e!s}", message=f"status_code=500"
+        )
 
 
 @router.get("/users/{user_id}")
@@ -108,14 +108,13 @@ async def fetch_profile(
 ):
     try:
         result = await service.fetch_profile(user_id)
-        if result:
-            return {"fetch_profile": "true"}
-        return {"fetch_profile": "false"}
+        return BaseResponse.ok(data=bool(result), message="Check user")
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Database error: {e!s}")
+        return BaseResponse.fail(
+                error=f"Database error: {e!s}", message=f"status_code=500"
+            )
 
-
-@router.post("/add_user/", response_model=dict)
+@router.post("/add_user/")
 async def add_user(
     user: CreateUserDTO,
     service: UserService = Depends(user_service),
@@ -129,8 +128,9 @@ async def add_user(
             referral_link=user.referral_link,
             referrer_id=user.referrer_id,
         )
-
-        return {"status": True}
+        return BaseResponse.ok(data=bool(user), message="Add user")
 
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error processing request: {e!s}")
+        return BaseResponse.fail(
+            error=f"Error processing request: {e!s}", message=f"status_code=500"
+        )

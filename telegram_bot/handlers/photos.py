@@ -7,7 +7,7 @@ from telegram_bot.texts import texts
 from telegram_bot.user_stage import UserStateAggregate
 
 
-async def save(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+async def handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     if not update.message.photo:
         return BotStates.SAVE_PHOTO
 

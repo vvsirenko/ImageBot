@@ -10,7 +10,7 @@ from sqlalchemy import Result, insert, select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.models.base import User
+from db.models.base import User, Payment
 from rest_api.models import ErrorMessage
 
 
@@ -53,9 +53,20 @@ class PQSLRepository(AbsDBRepository):
 
     @exception_handler
     async def payment_status(self, user_id: int | None) -> JSONResponse:
-        # call to table in db to get payment_status
-        prepared_answer = {"status": "success", "data": {}}
-        return prepared_answer
+        try:
+            statement = select(Payment).where(User.tg_id == user_id)
+            result = await self._session.execute(statement)
+            records = result.scalars().all()
+            if not records:
+                return None
+            if len(records) > 1:
+                raise Exception(f"Found multiple payment with tg_id={user_id}")
+            return records[0]
+        except IntegrityError as e:
+            raise Exception(
+                "Failed to fetch_payment due to a database constraint violation.") from e
+        except Exception as e:
+            raise Exception(f"Database error: {e!s}") from e
 
     @exception_handler
     async def add_user(

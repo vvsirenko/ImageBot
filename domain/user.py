@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field, PlainValidator
 from typing import Optional, Annotated
 
+from domain.models import BaseResponse
 from telegram_bot.user_repository import AbcUserRepository
 
 
@@ -32,9 +33,21 @@ class TelegramUser(BaseModel):
     def to_dict(self) -> dict:
         return self.dict(exclude_none=True)
 
-    async def fetch_profile(self, repo: AbcUserRepository) -> dict:
+    async def fetch_profile(self, repo: AbcUserRepository):
         # TODO: check if user is in db, if not, add it, decide how to handle this case
-        data = await repo.fetch_profile(self.id)
-        if not data:
-            await repo.add_user(self.to_dict())
+        response: BaseResponse = await repo.fetch_profile(self.id)
+        if response.success and response.data:
+            return True
+        return False
 
+    async def add_user(self, repo: AbcUserRepository):
+        response: BaseResponse = await repo.add_user(self.to_dict())
+        if response.success and response.data:
+            return True
+        return False
+
+    async def fetch_payment_info(self, repo: AbcUserRepository):
+        response: BaseResponse = await repo.fetch_payment_info(self.id)
+        if response.success and response.data:
+            return True
+        return False
