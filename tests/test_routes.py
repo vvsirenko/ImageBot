@@ -1,12 +1,13 @@
-import pytest
 import json
-from unittest.mock import AsyncMock, patch
-from fastapi import status, FastAPI
-from fastapi.testclient import TestClient
-from storage.client import S3ClientABC
 from io import BytesIO
-from rest_api.routes import router as telegram_router
+from unittest.mock import AsyncMock, patch
 
+import pytest
+from fastapi import FastAPI, status
+from fastapi.testclient import TestClient
+
+from rest_api.routes import router as telegram_router
+from storage.client import S3ClientABC
 
 app = FastAPI()
 app.include_router(telegram_router)
@@ -26,7 +27,7 @@ def fake_zip_file():
 @pytest.fixture
 def fake_user():
     """Return a fake user JSON string."""
-    return json.dumps({"id": "123465", "name": "test_user"})
+    return json.dumps({"id": "123465", "first_name": "test_user"})
 
 
 @pytest.fixture
@@ -37,7 +38,6 @@ def mock_s3_client():
     return mock
 
 
-@pytest.mark.asyncio
 async def test_upload_zip_success(fake_zip_file, fake_user):
     with patch("rest_api.routes.upload_zip_utils", new_callable=AsyncMock) as mock_upload_zip:
         mock_upload_zip.return_value = {"success": True}
@@ -47,6 +47,6 @@ async def test_upload_zip_success(fake_zip_file, fake_user):
             data={"user": fake_user},
         )
         assert response.status_code == status.HTTP_200_OK
-        assert response.json()['status_code'] == 201
-        assert response.json()["body"]["response"] == {'success': True}
+        assert response.json()["status_code"] == 201
+        assert response.json()["body"]["response"] == {"success": True}
 

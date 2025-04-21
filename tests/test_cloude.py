@@ -1,19 +1,9 @@
-import pytest
-import io
-from io import BufferedReader
+from unittest.mock import MagicMock, patch
 
-from aioresponses import aioresponses
-from aiohttp.web_exceptions import HTTPException
 import fastapi
-from storage.client import S3Client
-
 import pytest
-import aiohttp
-import uuid
-import logging
-from unittest.mock import AsyncMock, MagicMock, patch
-from aioresponses import aioresponses
-from io import BytesIO
+
+from storage.client import S3Client
 
 
 @pytest.fixture
@@ -28,7 +18,6 @@ def mock_user():
     return user
 
 
-@pytest.mark.asyncio
 async def test_upload_zip_file_not_found(s3_client, mock_user):
     cloud_url = "https://fake-cloud.com/upload_zip"
     mock_file = MagicMock()
@@ -39,7 +28,6 @@ async def test_upload_zip_file_not_found(s3_client, mock_user):
             await s3_client.upload_zip(mock_file, cloud_url, mock_user)
 
 
-@pytest.mark.asyncio
 async def test_upload_zip_unexpected_error(s3_client, mock_user):
     cloud_url = "https://fake-cloud.com/upload_zip"
     mock_file = MagicMock()

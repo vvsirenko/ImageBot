@@ -1,0 +1,11 @@
+[run]
+branch = True
+omit =
+    */tests/*
+    */test_*.py
+
+[report]
+fail_under = 60
+exclude_lines =
+    pragma: no cover
+    ^\s*if __name__ == .__main__.:
