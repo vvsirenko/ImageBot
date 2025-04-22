@@ -11,7 +11,7 @@ from services.zip_service.zip_service import ZipService
 from application.main import image_caption_generator, zip_creator
 from services.caption_service.caption_service import CaptionService
 from telegram_bot.main import ChatTelegramBot
-from telegram_bot.user_repository import UserRepository
+from infrastructure.user_repository import UserRepository
 from telegram_bot.user_service import UserService
 
 

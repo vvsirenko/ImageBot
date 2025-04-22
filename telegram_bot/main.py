@@ -9,16 +9,13 @@ from telegram.ext import (
     filters,
 )
 
-from api_client.client import FastAPIClient
-
 from services.caption_service.caption_service import CaptionService
 from services.zip_service.zip_service import ZipService
 from telegram_bot.handlers import start, how_it_works, begin, end, photos, \
     payment
 from telegram_bot.states import BotStates
 
-from telegram_bot.containers import Container
-from telegram_bot.user_repository import AbcUserRepository
+from infrastructure.user_repository import AbcUserRepository
 from telegram_bot.user_service import UserService
 
 logging.basicConfig(level=logging.INFO)

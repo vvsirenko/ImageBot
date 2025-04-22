@@ -23,6 +23,14 @@ class AbcUserRepository(abc.ABC):
     async def fetch_payment_info(self, user_id: str) -> 'BaseResponse':
         ...
 
+    @abc.abstractmethod
+    async def get_by_id(self, user_id: str) -> 'BaseResponse':
+        ...
+
+    @abc.abstractmethod
+    async def save(self, user_id: str) -> 'BaseResponse':
+        ...
+
 
 class UserRepository(AbcUserRepository):
     def __init__(self, base_url: str):
@@ -76,4 +84,5 @@ class UserRepository(AbcUserRepository):
             return BaseResponse.fail(
                 error=f"Unexpected error: {e}", message=f"User_id: {user_id}"
             )
+
 

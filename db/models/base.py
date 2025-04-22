@@ -23,7 +23,8 @@ class User(Base):
     # Relationships
     # referrals = relationship('Referral', back_populates='referrer')
     # referred_by = relationship("User", remote_side=[user_id], backref="referred_users")
-
+    def to_dict(self):
+        return {c.name: getattr(self, c.name) for c in self.__table__.columns}
 
 payment_status_enum = Enum("pending", "completed", "failed",
                            name="payment_status", create_type=False)

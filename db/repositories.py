@@ -113,7 +113,7 @@ class PQSLRepository(AbsDBRepository):
                 return None
             if len(records) > 1:
                 raise Exception(f"Found multiple users with tg_id={user_id}")
-            return records[0]
+            return records[0].to_dict()
         except IntegrityError as e:
             raise Exception(
                 "Failed to fetch_profile due to a database constraint violation.") from e

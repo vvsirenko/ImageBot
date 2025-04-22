@@ -4,7 +4,7 @@ from telegram.ext import ContextTypes
 from domain.user import TelegramUser
 from telegram_bot.states import BotStates
 from telegram_bot.texts import texts
-from telegram_bot.user_repository import AbcUserRepository
+from infrastructure.user_repository import AbcUserRepository
 from telegram_bot.utils import parse_user
 
 
