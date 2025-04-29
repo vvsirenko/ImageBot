@@ -25,9 +25,9 @@ ImageLimit = Annotated[int, PlainValidator(lambda v: v if isinstance(v, int) and
 class TelegramUser(BaseModel):
 
     id: Optional[UserId] = Field(default=None)
+    username: Optional[Username] = Field(default=None)
     first_name: Optional[FirstName] = Field(default=None)
     last_name: Optional[LastName] = Field(default=None)
-    username: Optional[Username] = Field(default=None)
     is_premium: Optional[IsPremium] = Field(default=False)
     language_code: Optional[LanguageCode] = Field(default=None)
     is_bot: Optional[IsBot] = Field(default=False)
