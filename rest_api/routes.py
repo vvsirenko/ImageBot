@@ -108,7 +108,7 @@ async def fetch_profile(
 ):
     try:
         result = await service.fetch_profile(user_id)
-        return BaseResponse.ok(data=bool(result), message="Check user")
+        return BaseResponse.ok(data=result, message="Check user")
     except Exception as e:
         return BaseResponse.fail(
                 error=f"Database error: {e!s}", message=f"status_code=500"

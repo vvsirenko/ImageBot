@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field, PlainValidator
 from typing import Optional, Annotated
 
 from domain.models import BaseResponse
-from telegram_bot.user_repository import AbcUserRepository
+from infrastructure.user_repository import AbcUserRepository
 
 
 UserId = Annotated[int, PlainValidator(lambda v: v if isinstance(v, int) and v > 0 else ValueError("UserId must be a positive integer"))]
@@ -19,16 +19,19 @@ IsBot = Annotated[bool, PlainValidator(lambda v: bool(v) if isinstance(v, bool) 
 
 LanguageCode = Annotated[str, PlainValidator(lambda v: v.lower() if isinstance(v, str) and len(v) == 2 else ValueError("LanguageCode must be 2-letter string"))]
 
+ImageLimit = Annotated[int, PlainValidator(lambda v: v if isinstance(v, int) and v >= 0 else ValueError("ImageLimit must be a positive integer"))]
+
 
 class TelegramUser(BaseModel):
 
     id: Optional[UserId] = Field(default=None)
+    username: Optional[Username] = Field(default=None)
     first_name: Optional[FirstName] = Field(default=None)
     last_name: Optional[LastName] = Field(default=None)
-    username: Optional[Username] = Field(default=None)
     is_premium: Optional[IsPremium] = Field(default=False)
     language_code: Optional[LanguageCode] = Field(default=None)
     is_bot: Optional[IsBot] = Field(default=False)
+    image_limit: Optional[ImageLimit] = Field(default=None)
 
     def to_dict(self) -> dict:
         return self.dict(exclude_none=True)
@@ -51,3 +54,11 @@ class TelegramUser(BaseModel):
         if response.success and response.data:
             return True
         return False
+
+    def can_process_image(self) -> bool:
+        return self.image_limit > 0
+
+    def decrement_image_limit(self):
+        if not self.can_process_image():
+            raise Exception("Image limit reached")
+        self.image_limit -= 1

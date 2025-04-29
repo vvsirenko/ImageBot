@@ -2,14 +2,12 @@ from unittest.mock import MagicMock, AsyncMock
 
 import pytest
 from telegram.ext import ContextTypes
-from telegram import User, InlineKeyboardMarkup, CallbackQuery
+from telegram import User, InlineKeyboardMarkup
 
-from telegram_bot.containers import Container
 from telegram_bot.handlers.start import handler as start_handler
 from telegram_bot.handlers.how_it_works import handler as how_it_works_handler
 from telegram_bot.states import BotStates
-from telegram_bot.user_repository import UserRepository
-from telegram_bot.user_service import UserService
+from infrastructure.user_repository import UserRepository
 
 
 @pytest.fixture
